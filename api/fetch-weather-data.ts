@@ -10,32 +10,50 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing city, latitude, or longitude parameter' });
   }
 
+  // Helper function to form time ranges
+  const range = (start: number, stop: number, step: number) =>
+	Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
+
   const params = {
     latitude: parseFloat(latitude),
     longitude: parseFloat(longitude),
     "hourly": ["temperature_2m", "precipitation_probability", "precipitation", "weather_code", "cloud_cover"],
     "forecast_days": 3
   };
+
   const url = "https://api.open-meteo.com/v1/forecast";
   const responses = await fetchWeatherApi(url, params);
+
+
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    
+    const response = responses[0];
 
-    const hourly = data.hourly;
-    const utcOffsetSeconds = data.utc_offset_seconds;
+    const utcOffsetSeconds = response.utcOffsetSeconds();
+    const timezone = response.timezone();
+    const timezoneAbbreviation = response.timezoneAbbreviation();
+    const latitude = response.latitude();
+    const longitude = response.longitude();
+    const hourly  = response.hourly()!;
 
-    const weatherData = {
-      time: hourly.time.map((t) => new Date((t + utcOffsetSeconds) * 1000)),
-      temperature2m: hourly.temperature_2m,
-      precipitationProbability: hourly.precipitation_probability,
-      precipitation: hourly.precipitation,
-      weatherCode: hourly.weather_code,
-      cloudCover: hourly.cloud_cover,
+
+    const weatherData : any = {
+      hourly: {
+        time: range(Number(hourly.time()), Number(hourly.timeEnd()), hourly.interval()).map(
+          (t) => new Date((t + utcOffsetSeconds) * 1000)
+        ),
+        temperature2m: hourly.variables(0)!.valuesArray()!,
+        precipitationProbability: hourly.variables(1)!.valuesArray()!,
+        precipitation: hourly.variables(2)!.valuesArray()!,
+        weatherCode: hourly.variables(3)!.valuesArray()!,
+        cloudCover: hourly.variables(4)!.valuesArray()!,
+      },    
     };
 
+    console.log(weatherData);
+
     for (let i = 0; i < weatherData.time.length; i++) {
-      const date = weatherData.time[i].toISOString().split('T')[0]; // Get date in YYYY-MM-DD format
+      const date = weatherData.time[i].toISOString().split('T')[0];
       const temperature = weatherData.temperature2m[i];
       const precipitationProbability = weatherData.precipitationProbability[i];
       const precipitation = weatherData.precipitation[i];
@@ -56,14 +74,13 @@ export default async function handler(req, res) {
 
       if (error) {
         console.error('Error upserting data:', error);
-        res.status(500).json({ error: 'Failed to upsert data' });
-        return;
+        return res.status(500).json({ error: 'Failed to upsert data' });
       }
     }
 
     res.status(200).json({ message: 'Data upserted successfully' });
   } catch (err) {
-    console.error('Error fetching weather data:', err);
-    res.status(500).json({ error: 'Failed to fetch weather data' });
+    console.error('Error fetching or processing weather data:', err);
+    res.status(500).json({ error: 'Failed to fetch or process weather data', details: err.message });
   }
 }
