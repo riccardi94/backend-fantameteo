@@ -52,12 +52,13 @@ export default async function handler(req, res) {
 
     for (let i = 0; i < weatherData.hourly.time.length; i++) {
       const date = weatherData.hourly.time[i].toISOString();
-      const temperature = weatherData.temperature2m[i];
-      const precipitationProbability = weatherData.precipitationProbability[i];
-      const precipitation = weatherData.precipitation[i];
-      const weatherCode = weatherData.weatherCode[i];
-      const cloudCover = weatherData.cloudCover[i];
-
+      const temperature = weatherData.hourly.temperature2m[i];
+      const precipitationProbability = weatherData.hourly.precipitationProbability[i];
+      const precipitation = weatherData.hourly.precipitation[i];
+      const weatherCode = weatherData.hourly.weatherCode[i];
+      const cloudCover = weatherData.hourly.cloudCover[i];
+      console.log(date , temperature , precipitationProbability , precipitation , weatherCode , cloudCover);
+    
       const { error } = await supabase.from('weather_data').upsert([
         {
           date,
@@ -69,7 +70,7 @@ export default async function handler(req, res) {
           city,
         },
       ], { onConflict: 'date, city' });
-
+    
       if (error) {
         console.error('Error upserting data:', error);
         return res.status(500).json({ error: 'Failed to upsert data' });
