@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { fetchWeatherApi } from 'openmeteo';
 
 const supabase = createClient('https://gcsjlnhslitmmqpzgrxn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdjc2psbmhzbGl0bW1xcHpncnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY0OTQ3ODksImV4cCI6MjA0MjA3MDc4OX0.iNujFZ5PeJRKR8wAQTkE340yJpuUb37wAH6hDEGHv94');
 
@@ -12,16 +13,11 @@ export default async function handler(req, res) {
   const params = {
     latitude: parseFloat(latitude),
     longitude: parseFloat(longitude),
-    hourly: [
-      'temperature_2m',
-      'precipitation_probability',
-      'precipitation',
-      'weather_code',
-      'cloud_cover',
-    ],
+    "hourly": ["temperature_2m", "precipitation_probability", "precipitation", "weather_code", "cloud_cover"],
+    "forecast_days": 3
   };
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${params.latitude}&longitude=${params.longitude}&hourly=${params.hourly.join(',')}&forecast_days=3`;
-
+  const url = "https://api.open-meteo.com/v1/forecast";
+  const responses = await fetchWeatherApi(url, params);
   try {
     const response = await fetch(url);
     const data = await response.json();
