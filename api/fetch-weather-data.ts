@@ -30,10 +30,10 @@ export default async function handler(req, res) {
     const utcOffsetSeconds = response.utcOffsetSeconds();
     const hourly  = response.hourly()!;
 
-    console.log(hourly);
-    console.log( hourly.variables(2)!.valuesArray()! , 'precipitation');
+    console.log('hourly', hourly);
 
     const weatherData : any = {
+
       hourly: {
         time: range(Number(hourly.time()), Number(hourly.timeEnd()), hourly.interval()).map(
           (t) => new Date((t + utcOffsetSeconds) * 1000)
@@ -43,11 +43,12 @@ export default async function handler(req, res) {
         precipitation: hourly.variables(2)!.valuesArray()!,
         weatherCode: hourly.variables(3)!.valuesArray()!,
         cloudCover: hourly.variables(4)!.valuesArray()!,
-      },    
+      },
+    
     };
 
-    console.log(weatherData);
-    console.log(weatherData.hourly);
+    console.log('weatherData',weatherData);
+    console.log('weatherData.hourly' , weatherData.hourly);
 
     for (let i = 0; i < weatherData.hourly.time.length; i++) {
       const date = weatherData.hourly.time[i].toISOString();
