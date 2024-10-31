@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(<string>process.env.SUPABASE_URL, <string>process.env.SUPABASE_ANON_KEY);
+const supabase = createClient('https://gcsjlnhslitmmqpzgrxn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdjc2psbmhzbGl0bW1xcHpncnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY0OTQ3ODksImV4cCI6MjA0MjA3MDc4OX0.iNujFZ5PeJRKR8wAQTkE340yJpuUb37wAH6hDEGHv94');
 
 export default async function handler(req, res) {
   const { city, latitude, longitude } = req.query;
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     ],
   };
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${params.latitude}&longitude=${params.longitude}&hourly=${params.hourly.join(',')}&forecast_days=3`;
-  
+
   try {
     const response = await fetch(url);
     const data = await response.json();
