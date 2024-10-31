@@ -1,0 +1,73 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(<string>process.env.SUPABASE_URL, <string>process.env.SUPABASE_ANON_KEY);
+
+export default async function handler(req, res) {
+  const { city, latitude, longitude } = req.query;
+
+  if (!city || !latitude || !longitude) {
+    return res.status(400).json({ error: 'Missing city, latitude, or longitude parameter' });
+  }
+
+  const params = {
+    latitude: parseFloat(latitude),
+    longitude: parseFloat(longitude),
+    hourly: [
+      'temperature_2m',
+      'precipitation_probability',
+      'precipitation',
+      'weather_code',
+      'cloud_cover',
+    ],
+  };
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${params.latitude}&longitude=${params.longitude}&hourly=${params.hourly.join(',')}&forecast_days=3`;
+  
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    const hourly = data.hourly;
+    const utcOffsetSeconds = data.utc_offset_seconds;
+
+    const weatherData = {
+      time: hourly.time.map((t) => new Date((t + utcOffsetSeconds) * 1000)),
+      temperature2m: hourly.temperature_2m,
+      precipitationProbability: hourly.precipitation_probability,
+      precipitation: hourly.precipitation,
+      weatherCode: hourly.weather_code,
+      cloudCover: hourly.cloud_cover,
+    };
+
+    for (let i = 0; i < weatherData.time.length; i++) {
+      const date = weatherData.time[i].toISOString().split('T')[0]; // Get date in YYYY-MM-DD format
+      const temperature = weatherData.temperature2m[i];
+      const precipitationProbability = weatherData.precipitationProbability[i];
+      const precipitation = weatherData.precipitation[i];
+      const weatherCode = weatherData.weatherCode[i];
+      const cloudCover = weatherData.cloudCover[i];
+
+      const { error } = await supabase.from('weather_data').upsert([
+        {
+          date,
+          temperature,
+          precipitation,
+          precipitation_probability: precipitationProbability,
+          cloud_cover: cloudCover,
+          code: weatherCode,
+          city,
+        },
+      ], { onConflict: 'date, city' });
+
+      if (error) {
+        console.error('Error upserting data:', error);
+        res.status(500).json({ error: 'Failed to upsert data' });
+        return;
+      }
+    }
+
+    res.status(200).json({ message: 'Data upserted successfully' });
+  } catch (err) {
+    console.error('Error fetching weather data:', err);
+    res.status(500).json({ error: 'Failed to fetch weather data' });
+  }
+}
