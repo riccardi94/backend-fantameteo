@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     const hourly  = response.hourly()!;
 
     console.log(hourly);
-
+    console.log( hourly.variables(2)!.valuesArray()! , 'precipitation');
 
     const weatherData : any = {
       hourly: {
@@ -47,6 +47,7 @@ export default async function handler(req, res) {
     };
 
     console.log(weatherData);
+    console.log(weatherData.hourly);
 
     for (let i = 0; i < weatherData.hourly.time.length; i++) {
       const date = weatherData.hourly.time[i].toISOString();
