@@ -52,8 +52,8 @@ export default async function handler(req, res) {
 
     console.log(weatherData);
 
-    for (let i = 0; i < weatherData.time.length; i++) {
-      const date = weatherData.time[i].toISOString().split('T')[0];
+    for (let i = 0; i < weatherData.hourly.time.length; i++) {
+      const date = weatherData.hourly.time[i].toISOString().split('T')[0];
       const temperature = weatherData.temperature2m[i];
       const precipitationProbability = weatherData.precipitationProbability[i];
       const precipitation = weatherData.precipitation[i];
