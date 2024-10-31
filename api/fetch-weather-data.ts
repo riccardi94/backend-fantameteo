@@ -5,14 +5,11 @@ const supabase = createClient('https://gcsjlnhslitmmqpzgrxn.supabase.co', 'eyJhb
 
 export default async function handler(req, res) {
   const { city, latitude, longitude } = req.query;
+  console.log(city , latitude , longitude);
 
   if (!city || !latitude || !longitude) {
     return res.status(400).json({ error: 'Missing city, latitude, or longitude parameter' });
   }
-
-  // Helper function to form time ranges
-  const range = (start: number, stop: number, step: number) =>
-	Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
 
   const params = {
     latitude: parseFloat(latitude),
@@ -23,18 +20,17 @@ export default async function handler(req, res) {
 
   const url = "https://api.open-meteo.com/v1/forecast";
   const responses = await fetchWeatherApi(url, params);
-
+  // Helper function to form time ranges
+  const range = (start: number, stop: number, step: number) =>
+    Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
+  
 
   try {
-    
     const response = responses[0];
-
     const utcOffsetSeconds = response.utcOffsetSeconds();
-    const timezone = response.timezone();
-    const timezoneAbbreviation = response.timezoneAbbreviation();
-    const latitude = response.latitude();
-    const longitude = response.longitude();
     const hourly  = response.hourly()!;
+
+    console.log(hourly);
 
 
     const weatherData : any = {
