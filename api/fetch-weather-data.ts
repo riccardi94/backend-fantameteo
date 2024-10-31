@@ -5,7 +5,7 @@ const supabase = createClient('https://gcsjlnhslitmmqpzgrxn.supabase.co', 'eyJhb
 
 export default async function handler(req, res) {
   const { city, latitude, longitude } = req.query;
-  console.log(city , latitude , longitude);
+  console.log(city, latitude, longitude);
 
   if (!city || !latitude || !longitude) {
     return res.status(400).json({ error: 'Missing city, latitude, or longitude parameter' });
@@ -19,21 +19,17 @@ export default async function handler(req, res) {
   };
 
   const url = "https://api.open-meteo.com/v1/forecast";
-  const responses = await fetchWeatherApi(url, params);
-  // Helper function to form time ranges
-  const range = (start: number, stop: number, step: number) =>
-    Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
-  
 
   try {
+    const responses = await fetchWeatherApi(url, params);
     const response = responses[0];
     const utcOffsetSeconds = response.utcOffsetSeconds();
-    const hourly  = response.hourly()!;
+    const hourly = response.hourly()!;
 
-    console.log('hourly', hourly);
+    const range = (start, stop, step) =>
+      Array.from({ length: (stop - start) / step }, (_, i) => start + i * step);
 
-    const weatherData : any = {
-
+    const weatherData = {
       hourly: {
         time: range(Number(hourly.time()), Number(hourly.timeEnd()), hourly.interval()).map(
           (t) => new Date((t + utcOffsetSeconds) * 1000)
@@ -44,33 +40,32 @@ export default async function handler(req, res) {
         weatherCode: hourly.variables(3)!.valuesArray()!,
         cloudCover: hourly.variables(4)!.valuesArray()!,
       },
-    
     };
 
-    console.log('weatherData',weatherData);
-    console.log('weatherData.hourly' , weatherData.hourly);
+    console.log('weatherData', weatherData);
 
-    for (let i = 0; i < weatherData.hourly.time.length; i++) {
-      const date = weatherData.hourly.time[i].toISOString();
-      const temperature = weatherData.hourly.temperature2m[i];
-      const precipitationProbability = weatherData.hourly.precipitationProbability[i];
-      const precipitation = weatherData.hourly.precipitation[i];
-      const weatherCode = weatherData.hourly.weatherCode[i];
-      const cloudCover = weatherData.hourly.cloudCover[i];
-      console.log(date , temperature , precipitationProbability , precipitation , weatherCode , cloudCover);
-    
-      const { error } = await supabase.from('weather_data').upsert([
-        {
-          date,
-          temperature,
-          precipitation,
-          precipitation_probability: precipitationProbability,
-          cloud_cover: cloudCover,
-          code: weatherCode,
+    // Implementazione del batch upsert
+    const batchSize = 10; // Puoi regolare questo numero in base alle tue esigenze
+    const batches : any[] = [];
+
+    for (let i = 0; i < weatherData.hourly.time.length; i += batchSize) {
+      const batch : any = [];
+      for (let j = i; j < i + batchSize && j < weatherData.hourly.time.length; j++) {
+        batch.push({
+          date: weatherData.hourly.time[j].toISOString(),
+          temperature: weatherData.hourly.temperature2m[j],
+          precipitation: weatherData.hourly.precipitation[j],
+          precipitation_probability: weatherData.hourly.precipitationProbability[j],
+          cloud_cover: weatherData.hourly.cloudCover[j],
+          code: weatherData.hourly.weatherCode[j],
           city,
-        },
-      ], { onConflict: 'date, city' });
-    
+        });
+      }
+      batches.push(batch);
+    }
+
+    for (const batch of batches) {
+      const { error } = await supabase.from('weather_data').upsert(batch, { onConflict: 'date, city' });
       if (error) {
         console.error('Error upserting data:', error);
         return res.status(500).json({ error: 'Failed to upsert data' });
