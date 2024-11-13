@@ -2,9 +2,15 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-      "@vercel/node": "^3.0.0",
-      "@supabase/supabase-js": "^2.39.0",
-      "openmeteo": "^1.1.0",
-      "typescript": "^5.0.0"
-  }  
+    "@supabase/supabase-js": "^2.39.0",
+    "openmeteo": "^1.1.0",
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "@types/node": "^20.0.0"
+  },
+  "scripts": {
+    "fetch-weather": "ts-node script/fetch-weather-data.ts"
+  }
 }

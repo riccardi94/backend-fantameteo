@@ -1,0 +1,27 @@
+name: Fetch Weather Data
+
+on:
+  schedule:
+    - cron: '0 * * * *' 
+  workflow_dispatch: 
+  
+jobs:
+  fetch-weather:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20' 
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run weather fetch script
+      env:
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      run: npm run fetch-weather

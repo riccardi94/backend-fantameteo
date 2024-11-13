@@ -1,31 +1,24 @@
-# Node.js Hello World
+# FantaCalcio Weather App
 
-Simple Node.js + Vercel example that returns a "Hello World" response.
+This repository is a training project aimed at creating an Angular application that displays weather information for cities where my friends who play FantaCalcio live. The weather data is fetched from the OpenMeteo API.
 
-## How to Use
+## Project Overview
 
-You can choose from one of the following two methods to use this repository:
+This project combines several technologies and concepts:
+- Angular for the frontend
+- Node.js for backend scripting
+- GitHub Actions for automated data fetching
+- Supabase for data storage
+- OpenMeteo API for weather data
 
-### One-Click Deploy
+## Workflow
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=vercel-examples):
+1. **Data Fetching**
+   - A Node.js script (`script/fetch-weather-data.ts`) fetches weather data from OpenMeteo API.
+   - GitHub Actions run this script hourly to keep data up-to-date.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/vercel/examples/tree/main/solutions/node-hello-world&project-name=node-hello-world&repository-name=node-hello-world)
+2. **Data Storage**
+   - Fetched weather data is stored in a Supabase database.
 
-### Clone and Deploy
-
-```bash
-git clone https://github.com/vercel/examples/tree/main/solutions/node-hello-world
-```
-
-Install the Vercel CLI:
-
-```bash
-npm i -g vercel
-```
-
-Then run the app at the root of the repository:
-
-```bash
-vercel dev
-```
+3. **Frontend Display**
+   - An Angular application retrieves data from Supabase and displays it to users.

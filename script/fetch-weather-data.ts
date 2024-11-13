@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { VercelRequest, VercelRequestQuery, VercelResponse } from '@vercel/node';
 import { fetchWeatherApi } from 'openmeteo';
 
-const supabase = createClient('https://gcsjlnhslitmmqpzgrxn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdjc2psbmhzbGl0bW1xcHpncnhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY0OTQ3ODksImV4cCI6MjA0MjA3MDc4OX0.iNujFZ5PeJRKR8wAQTkE340yJpuUb37wAH6hDEGHv94');
+const supabase = createClient(process.env.SUPABASE_URL as string, process.env.SUPABASE_KEY as string);
 
 const CITIES = [
   { name: 'Roma', lat: 41.9028, lon: 12.4964 },
@@ -18,22 +17,6 @@ interface WeatherParams {
   hourly: string[];
   timezone: string;
   forecast_days: number;
-}
-
-interface WeatherRecord {
-  date: string;  // Ora useremo il timestamp completo come stringa ISO
-  temperature: number;
-  precipitation: number;
-  precipitation_probability: number;
-  cloud_cover: number;
-  code: number;
-  city: string;
-}
-
-interface QueryParams extends VercelRequestQuery {
-  city: string;
-  lat: string;
-  lon: string;
 }
 
 async function fetchCityWeather(city: string, latitude: number, longitude: number) {
@@ -75,12 +58,7 @@ async function fetchCityWeather(city: string, latitude: number, longitude: numbe
   }
 
 }
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-
-  if (req.headers['x-vercel-cron'] !== 'true') {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
+async function updateWeatherData() {
   try {
     const results = await Promise.all(
       CITIES.map(city => fetchCityWeather(city.name, city.lat, city.lon))
@@ -88,7 +66,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const allWeatherRecords = results.flat();
 
-    // Upsert data on supbase
     const { data, error } = await supabase
       .from('weather_data')
       .upsert(allWeatherRecords, {
@@ -98,17 +75,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (error) {
       console.error('Error inserting data into Supabase:', error);
-      return res.status(500).json({ error: 'Database Error', details: error });
+      process.exit(1);
     }
 
-    return res.status(200).json({ 
-      message: 'Weather data successfully updated for all cities',
-      recordsProcessed: allWeatherRecords.length,
-      citiesProcessed: CITIES.length
-    });
-
+    console.log(`Weather data successfully updated for all cities. Processed ${allWeatherRecords.length} records for ${CITIES.length} cities.`);
   } catch (error) {
-    console.error('Error in weather cron job:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Error in weather update job:', error);
+    process.exit(1);
   }
 }
+
+updateWeatherData();
