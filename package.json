@@ -13,6 +13,6 @@
   },
   "scripts": {
     "fetch-weather": "ts-node script/fetch-weather-data.ts",
-    "fetch-history-precipitation" : "ts-node script/fetch-history-precipitation.ts"
+    "fetch-history-precipitation" : "ts-node script/fetch-precipitation-history.ts"
   }
 }
