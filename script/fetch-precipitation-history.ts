@@ -17,7 +17,7 @@ interface HistoricalPrecipitationInterface {
 async function fetchHistoryPrecipitationSum(city: string, latitude: number, longitude: number) {
     try {
         const now = dayjs();
-        const two_days_ago = now.subtract(2, 'days').startOf('day').toDate();
+        const two_days_ago = now.subtract(2, 'days').startOf('day').format('YYYY-MM-DD');
         const params: HistoricalPrecipitationInterface = {
             latitude: latitude,
             longitude: longitude,
