@@ -4,15 +4,16 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "dayjs": "^1.11.13",
+    "dotenv": "^16.4.5",
     "openmeteo": "^1.1.0",
     "typescript": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^20.17.6",
     "ts-node": "^10.9.1"
   },
   "scripts": {
     "fetch-weather": "ts-node script/fetch-weather-data.ts",
-    "fetch-history-precipitation" : "ts-node script/fetch-precipitation-history.ts"
+    "fetch-history-precipitation": "ts-node script/fetch-precipitation-history.ts"
   }
 }
