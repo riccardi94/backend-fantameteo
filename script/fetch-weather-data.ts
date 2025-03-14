@@ -4,7 +4,6 @@ import { CITIES } from './global-data';
 
 const supabase = createClient(process.env.SUPABASE_URL as string, process.env.SUPABASE_KEY as string);
 
-//Dummy commits
 
 interface WeatherParams {
   latitude: number;
