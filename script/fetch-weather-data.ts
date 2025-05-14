@@ -4,6 +4,7 @@ import { CITIES } from './global-data';
 
 const supabase = createClient(process.env.SUPABASE_URL as string, process.env.SUPABASE_KEY as string);
 
+//Dummy comment for workflow 
 
 interface WeatherParams {
   latitude: number;
